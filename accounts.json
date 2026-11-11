@@ -1,0 +1,40 @@
+{
+  "_説明": "投稿先アカウントの一覧。theme は general（総合運）か love（恋愛運）。*_env はGitHub Secretsの名前。Secretが未登録のアカウントは自動でスキップされます。",
+  "accounts": [
+    {
+      "name": "Threads 1（総合運）",
+      "platform": "threads",
+      "theme": "general",
+      "token_env": "THREADS_ACCESS_TOKEN_1"
+    },
+    {
+      "name": "Threads 2（恋愛運）",
+      "platform": "threads",
+      "theme": "love",
+      "token_env": "THREADS_ACCESS_TOKEN_2"
+    },
+    {
+      "name": "Instagram 1（総合運）",
+      "platform": "instagram",
+      "theme": "general",
+      "token_env": "IG_ACCESS_TOKEN_1",
+      "user_id_env": "IG_USER_ID_1"
+    },
+    {
+      "name": "Instagram 2（恋愛運）",
+      "platform": "instagram",
+      "theme": "love",
+      "token_env": "IG_ACCESS_TOKEN_2",
+      "user_id_env": "IG_USER_ID_2"
+    },
+    {
+      "name": "X（総合運）",
+      "platform": "x",
+      "theme": "general",
+      "token_env": "X_ACCESS_TOKEN",
+      "token_secret_env": "X_ACCESS_TOKEN_SECRET",
+      "api_key_env": "X_API_KEY",
+      "api_secret_env": "X_API_SECRET"
+    }
+  ]
+}
