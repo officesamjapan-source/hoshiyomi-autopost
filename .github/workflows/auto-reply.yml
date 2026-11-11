@@ -1,0 +1,43 @@
+name: コメントへの自動返信
+
+on:
+  schedule:
+    # 30分ごと（GitHub の混雑で数分〜数十分遅れることがあります）
+    - cron: "*/30 * * * *"
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: "返信せずに返信文だけ確認する"
+        type: boolean
+        default: true
+
+concurrency:
+  group: auto-reply
+  cancel-in-progress: false
+
+jobs:
+  reply:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: ライブラリをインストール
+        run: pip install -r requirements.txt
+
+      - name: コメントに返信
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          THREADS_ACCESS_TOKEN_1: ${{ secrets.THREADS_ACCESS_TOKEN_1 }}
+          THREADS_ACCESS_TOKEN_2: ${{ secrets.THREADS_ACCESS_TOKEN_2 }}
+          IG_ACCESS_TOKEN_1: ${{ secrets.IG_ACCESS_TOKEN_1 }}
+          IG_USER_ID_1: ${{ secrets.IG_USER_ID_1 }}
+          IG_ACCESS_TOKEN_2: ${{ secrets.IG_ACCESS_TOKEN_2 }}
+          IG_USER_ID_2: ${{ secrets.IG_USER_ID_2 }}
+          # 手動実行で dry_run にチェックしたときだけ確認モード。定期実行は本番
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && '--dry-run' || '' }}
+        run: python main.py reply $DRY_RUN
