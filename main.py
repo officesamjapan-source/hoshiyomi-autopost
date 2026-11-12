@@ -49,6 +49,11 @@ def env(name: str | None) -> str:
     return (os.environ.get(name) or "").strip() if name else ""
 
 
+def _uid(acc: dict) -> str:
+    """投稿先のユーザーID。Secret（user_id_env）→ accounts.json の user_id → "me" の順。"""
+    return env(acc.get("user_id_env")) or acc.get("user_id") or "me"
+
+
 def image_url_for(card_rel: str) -> str:
     base = os.environ.get("IMAGE_BASE_URL", "").rstrip("/")
     if not base:
@@ -91,9 +96,9 @@ def _already_posted(acc: dict, body: str) -> bool:
     p = acc["platform"]
     try:
         if p == "threads":
-            recent = posters.recent_threads_texts(env(acc["token_env"]), env(acc.get("user_id_env")) or "me")
+            recent = posters.recent_threads_texts(env(acc["token_env"]), _uid(acc))
         elif p == "instagram":
-            recent = posters.recent_instagram_captions(env(acc["token_env"]), env(acc.get("user_id_env")))
+            recent = posters.recent_instagram_captions(env(acc["token_env"]), _uid(acc))
         else:
             return False
     except Exception as e:  # 確認できないときは投稿を優先する
@@ -108,11 +113,9 @@ def _post_one(acc: dict, fortune: dict, body: str, reply: str | None) -> str:
     p = acc["platform"]
     if p == "threads":
         return posters.post_threads(body, image_url_for(fortune["card"]), reply,
-                                    token=env(acc["token_env"]), user_id=env(acc.get("user_id_env")) or "me")
+                                    token=env(acc["token_env"]), user_id=_uid(acc))
     if p == "instagram":
-        user_id = env(acc.get("user_id_env"))
-        if not user_id:
-            raise RuntimeError(f"{acc.get('user_id_env')} が設定されていません")
+        user_id = _uid(acc)
         return posters.post_instagram(body, image_url_for(fortune["card"]),
                                       token=env(acc["token_env"]), ig_user=user_id)
     if p == "x":
@@ -173,7 +176,7 @@ def cmd_reply(dry_run: bool) -> int:
             continue
         print(f"===== {acc['name']} =====")
         try:
-            sent, review = run_account(acc["platform"], token, env(acc.get("user_id_env")), dry_run)
+            sent, review = run_account(acc["platform"], token, _uid(acc), dry_run)
             print(f"[ok] 返信 {sent} 件")
             review_all += [f"{acc['name']}: {r}" for r in review]
         except Exception as e:

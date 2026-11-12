@@ -27,7 +27,7 @@ from datetime import datetime, timedelta, timezone
 import requests
 
 from .generate import MODEL, SIGNS
-from .posters import IG_API, THREADS_API, TIMEOUT, _check, _threads_publish
+from .posters import THREADS_API, ig_api, TIMEOUT, _check, _threads_publish
 
 POST_MAX_AGE = timedelta(days=3)       # これより古い投稿は見ない
 COMMENT_MAX_AGE = timedelta(hours=48)  # これより古いコメントには返信しない
@@ -267,15 +267,15 @@ def threads_pending(token: str, user_id: str = "me") -> list[dict]:
 
 
 def instagram_pending(token: str, ig_user: str) -> list[dict]:
-    me = _check(requests.get(f"{IG_API}/{ig_user}", params={"fields": "username", "access_token": token},
+    me = _check(requests.get(f"{ig_api(token)}/{ig_user}", params={"fields": "username", "access_token": token},
                              timeout=TIMEOUT), "Instagram ユーザー取得")["username"]
-    posts = _get_all(f"{IG_API}/{ig_user}/media",
+    posts = _get_all(f"{ig_api(token)}/{ig_user}/media",
                      {"fields": "id,caption,timestamp", "limit": 10, "access_token": token}, pages=1)
     pending = []
     for post in posts:
         if not _recent(post.get("timestamp"), POST_MAX_AGE):
             continue
-        comments = _get_all(f"{IG_API}/{post['id']}/comments",
+        comments = _get_all(f"{ig_api(token)}/{post['id']}/comments",
                             {"fields": "id,text,username,timestamp,replies{username}",
                              "limit": 50, "access_token": token})
         done_users = {me}
@@ -295,7 +295,7 @@ def send_threads_reply(comment_id: str, text: str, token: str, user_id: str = "m
 
 
 def send_instagram_reply(comment_id: str, text: str, token: str) -> str:
-    r = requests.post(f"{IG_API}/{comment_id}/replies", data={"message": text, "access_token": token},
+    r = requests.post(f"{ig_api(token)}/{comment_id}/replies", data={"message": text, "access_token": token},
                       timeout=TIMEOUT)
     return _check(r, "Instagram 返信")["id"]
 
@@ -305,7 +305,7 @@ def run_account(platform: str, token: str, user_id: str, dry_run: bool) -> tuple
     if platform == "threads":
         pending = threads_pending(token, user_id or "me")
     elif platform == "instagram":
-        pending = instagram_pending(token, user_id)
+        pending = instagram_pending(token, user_id or "me")
     else:
         return 0, []
 

@@ -67,21 +67,28 @@ def recent_threads_texts(token: str, user_id: str = "me") -> list[str]:
 
 
 # ---------------- Instagram ----------------
-IG_API = "https://graph.facebook.com/v21.0"
+# Instagram ログインで発行したトークン（IGAA…）は graph.instagram.com、
+# Facebook ログインのトークンは graph.facebook.com を使う
+IG_API = "https://graph.instagram.com/v21.0"
+FB_API = "https://graph.facebook.com/v21.0"
+
+
+def ig_api(token: str) -> str:
+    return IG_API if token.startswith("IG") else FB_API
 
 
 def recent_instagram_captions(token: str, ig_user: str) -> list[str]:
-    r = requests.get(f"{IG_API}/{ig_user}/media",
+    r = requests.get(f"{ig_api(token)}/{ig_user}/media",
                      params={"fields": "caption", "limit": 10, "access_token": token}, timeout=TIMEOUT)
     return [d.get("caption") or "" for d in _check(r, "Instagram 投稿一覧").get("data", [])]
 
 
 def post_instagram(caption: str, image_url: str, token: str, ig_user: str) -> str:
-    r = requests.post(f"{IG_API}/{ig_user}/media",
+    r = requests.post(f"{ig_api(token)}/{ig_user}/media",
                       data={"image_url": image_url, "caption": caption, "access_token": token}, timeout=TIMEOUT)
     container_id = _check(r, "Instagram コンテナ作成")["id"]
     for _ in range(20):
-        r = requests.get(f"{IG_API}/{container_id}",
+        r = requests.get(f"{ig_api(token)}/{container_id}",
                          params={"fields": "status_code", "access_token": token}, timeout=TIMEOUT)
         status = _check(r, "Instagram ステータス確認").get("status_code")
         if status == "FINISHED":
@@ -91,7 +98,7 @@ def post_instagram(caption: str, image_url: str, token: str, ig_user: str) -> st
         time.sleep(5)
     else:
         raise RuntimeError("Instagram メディア処理がタイムアウトしました")
-    r = requests.post(f"{IG_API}/{ig_user}/media_publish",
+    r = requests.post(f"{ig_api(token)}/{ig_user}/media_publish",
                       data={"creation_id": container_id, "access_token": token}, timeout=TIMEOUT)
     return _check(r, "Instagram 公開")["id"]
 

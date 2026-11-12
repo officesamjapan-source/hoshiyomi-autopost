@@ -21,7 +21,8 @@
       "slot": "morning",
       "theme": "general",
       "token_env": "IG_ACCESS_TOKEN_1",
-      "user_id_env": "IG_USER_ID_1"
+      "user_id_env": "IG_USER_ID_1",
+      "user_id": "17841413471743406"
     },
     {
       "name": "Instagram 夜（恋愛運）",
@@ -29,7 +30,8 @@
       "slot": "evening",
       "theme": "love",
       "token_env": "IG_ACCESS_TOKEN_1",
-      "user_id_env": "IG_USER_ID_1"
+      "user_id_env": "IG_USER_ID_1",
+      "user_id": "17841413471743406"
     },
     {
       "name": "X 朝（総合運）",
