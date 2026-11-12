@@ -1,0 +1,42 @@
+name: 緊急停止スイッチ
+
+# Actions 画面で「Run workflow」を押すだけで、自動投稿と自動返信を止める・再開する
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: "停止 = 自動投稿と自動返信を止める ／ 再開 = また動かす"
+        type: choice
+        options: [停止, 再開]
+        default: 停止
+
+permissions:
+  actions: write   # ほかのワークフローを止めたり動かしたりするため
+
+jobs:
+  switch:
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      GH_REPO: ${{ github.repository }}
+      MODE: ${{ inputs.mode }}
+    steps:
+      - name: 自動投稿と自動返信を切り替え
+        run: |
+          for wf in daily-post.yml auto-reply.yml; do
+            if [ "$MODE" = "停止" ]; then
+              gh workflow disable "$wf" || true
+              # 実行中・順番待ちのものも取り消す
+              for st in in_progress queued; do
+                for id in $(gh run list --workflow "$wf" --status "$st" --json databaseId -q '.[].databaseId'); do
+                  gh run cancel "$id" || true
+                done
+              done
+              echo "停止しました: $wf"
+            else
+              gh workflow enable "$wf" || true
+              echo "再開しました: $wf"
+            fi
+          done
+          echo ""
+          gh workflow list --all
