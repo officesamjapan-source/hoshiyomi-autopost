@@ -1,0 +1,81 @@
+name: 毎日の占い投稿（朝7時・夜21時）
+
+on:
+  schedule:
+    # 日本時間 7:00 = 22:00 UTC（総合運）、21:00 = 12:00 UTC（恋愛運）
+    # GitHub の混雑で数分〜30分ほど遅れることがあります
+    - cron: "0 22 * * *"
+    - cron: "0 12 * * *"
+  workflow_dispatch:      # Actions 画面から手動実行もできる
+    inputs:
+      dry_run:
+        description: "投稿せずに画像と文章だけ確認する"
+        type: boolean
+        default: true
+      slot:
+        description: "どの枠を動かすか（auto は今の時刻で自動判定）"
+        type: choice
+        options: [auto, morning, evening]
+        default: auto
+
+permissions:
+  contents: write   # 画像をリポジトリに保存するため
+
+concurrency:
+  group: daily-post
+  cancel-in-progress: false
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    env:
+      # 定期実行は時刻で朝・夜を自動判定。手動実行は選んだ枠
+      SLOT: ${{ inputs.slot || 'auto' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: 日本語フォントをインストール
+        run: sudo apt-get update && sudo apt-get install -y fonts-noto-cjk
+
+      - name: ライブラリをインストール
+        run: pip install -r requirements.txt
+
+      - name: 占いと画像を作成
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+          RANKING_SALT: ${{ secrets.RANKING_SALT }}
+          SITE_NAME: ${{ vars.SITE_NAME }}
+        run: python main.py generate --slot $SLOT
+
+      - name: 画像をリポジトリに保存（Threads/Instagram が画像URLを読むため）
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add cards/
+          git commit -m "card: $(date -u +%F)" || echo "変更なし"
+          git pull --rebase
+          git push
+          sleep 20
+
+      - name: SNSに投稿
+        env:
+          SITE_NAME: ${{ vars.SITE_NAME }}
+          SITE_URL: ${{ vars.SITE_URL }}
+          # accounts.json に書いた名前と合わせる。アカウントを増やしたらここにも追加
+          THREADS_ACCESS_TOKEN_1: ${{ secrets.THREADS_ACCESS_TOKEN_1 }}
+          THREADS_ACCESS_TOKEN_2: ${{ secrets.THREADS_ACCESS_TOKEN_2 }}
+          IG_ACCESS_TOKEN_1: ${{ secrets.IG_ACCESS_TOKEN_1 }}
+          IG_USER_ID_1: ${{ secrets.IG_USER_ID_1 }}
+          IG_ACCESS_TOKEN_2: ${{ secrets.IG_ACCESS_TOKEN_2 }}
+          IG_USER_ID_2: ${{ secrets.IG_USER_ID_2 }}
+          X_API_KEY: ${{ secrets.X_API_KEY }}
+          X_API_SECRET: ${{ secrets.X_API_SECRET }}
+          X_ACCESS_TOKEN: ${{ secrets.X_ACCESS_TOKEN }}
+          X_ACCESS_TOKEN_SECRET: ${{ secrets.X_ACCESS_TOKEN_SECRET }}
+          # 手動実行で dry_run にチェックしたときだけ確認モード。定期実行は本番
+          DRY_RUN: ${{ github.event_name == 'workflow_dispatch' && inputs.dry_run && '--dry-run' || '' }}
+        run: python main.py post --slot $SLOT $DRY_RUN
