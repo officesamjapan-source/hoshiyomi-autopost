@@ -64,6 +64,8 @@ _TEMPLATES = {
             ("身の回りを整えると運気アップ。デスクの片付けから", "整理整頓で運気UP"),
             ("人の話をよく聞くとヒントが見つかります", "聞き上手がカギ"),
             ("小さなご褒美で気分転換を。午後から流れが良くなります", "午後から好調"),
+            ("いつもの道を少し変えると、思わぬ発見がありそう", "寄り道に発見あり"),
+            ("ていねいな挨拶が信頼を呼ぶ日。笑顔を添えて", "挨拶が運を呼ぶ"),
         ],
         "low": [
             ("無理は禁物。今日は早めに休んでエネルギーを充電して", "休息で充電を"),
@@ -83,6 +85,7 @@ _TEMPLATES = {
             ("相手の話にじっくり耳を傾けると関係が深まります", "聞く姿勢がカギ"),
             ("小さな気づかいが好印象に。メッセージは短く温かく", "小さな気づかいを"),
             ("自分磨きに向く日。好きなことに夢中な姿が魅力に", "自分磨きが吉"),
+            ("友だちとの何気ない会話に、恋のヒントがありそう", "会話にヒント"),
         ],
         "low": [
             ("すれ違いに注意。返事を急がずゆっくり向き合って", "急がずゆっくり"),
@@ -90,6 +93,24 @@ _TEMPLATES = {
             ("思い込みは禁物。気になることは素直に聞いてみて", "素直さがカギ"),
         ],
     },
+}
+_DAY_THEMES = {
+    "general": [
+        "星のメッセージを受け取って、すてきな一日を",
+        "小さな一歩が、明日の流れをつくる日",
+        "迷ったときは、心が軽くなるほうへ",
+        "あなたのペースが、いちばんの近道",
+        "ていねいに過ごすほど、運が味方する日",
+        "いつもの景色に、ヒントが隠れています",
+        "がんばりすぎない日が、運を整えます",
+    ],
+    "love": [
+        "ときめきは、いつもの毎日の中に",
+        "素直な一言が、距離を縮める日",
+        "自分を大切にすると、恋も輝きます",
+        "小さな勇気が、ときめきを連れてくる",
+        "やさしさが、ちゃんと伝わる日",
+    ],
 }
 _ITEMS = ["ハンカチ", "手帳", "ミントガム", "腕時計", "観葉植物", "温かい紅茶",
           "イヤホン", "キーホルダー", "リップクリーム", "チョコレート", "ブックカバー", "折りたたみ傘"]
@@ -101,14 +122,18 @@ def _template_texts(order, day: date, theme: str) -> dict:
     rng = random.Random(f"text-{theme}-{day.isoformat()}")
     items = rng.sample(_ITEMS, 12)
     colors = rng.sample(_COLORS, 12)
-    templates = _TEMPLATES[theme]
+    # 同じ日に同じ文が重ならないよう、段階ごとにシャッフルして順に使う
+    pools = {tier: rng.sample(lst, len(lst)) for tier, lst in _TEMPLATES[theme].items()}
+    used = {tier: 0 for tier in pools}
     result = {}
     for i, (key, _, _) in enumerate(order):
         tier = "high" if i < 4 else ("mid" if i < 9 else "low")
-        message, short = rng.choice(templates[tier])
+        pool = pools[tier]
+        message, short = pool[used[tier] % len(pool)]
+        used[tier] += 1
         result[key] = {"message": message, "short": short,
                        "lucky_item": items[i], "lucky_color": colors[i]}
-    return {"theme": THEMES[theme]["default_theme"], "signs": result}
+    return {"theme": rng.choice(_DAY_THEMES[theme]), "signs": result}
 
 
 # ---------- Claude で文章を作る ----------
