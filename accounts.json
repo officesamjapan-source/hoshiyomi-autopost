@@ -1,35 +1,40 @@
 {
-  "_説明": "投稿先アカウントの一覧。theme は general（総合運）か love（恋愛運）。*_env はGitHub Secretsの名前。Secretが未登録のアカウントは自動でスキップされます。",
+  "_説明": "投稿先の一覧。slot は morning（朝7時）か evening（夜21時）。theme は general（総合運）か love（恋愛運）。*_env はGitHub Secretsの名前。Secretが未登録のものは自動でスキップされます。同じアカウントに朝と夜の2件を書けば、1日2回投稿します。",
   "accounts": [
     {
-      "name": "Threads 1（総合運）",
+      "name": "Threads 朝（総合運）",
       "platform": "threads",
+      "slot": "morning",
       "theme": "general",
       "token_env": "THREADS_ACCESS_TOKEN_1"
     },
     {
-      "name": "Threads 2（恋愛運）",
+      "name": "Threads 夜（恋愛運）",
       "platform": "threads",
+      "slot": "evening",
       "theme": "love",
-      "token_env": "THREADS_ACCESS_TOKEN_2"
+      "token_env": "THREADS_ACCESS_TOKEN_1"
     },
     {
-      "name": "Instagram 1（総合運）",
+      "name": "Instagram 朝（総合運）",
       "platform": "instagram",
+      "slot": "morning",
       "theme": "general",
       "token_env": "IG_ACCESS_TOKEN_1",
       "user_id_env": "IG_USER_ID_1"
     },
     {
-      "name": "Instagram 2（恋愛運）",
+      "name": "Instagram 夜（恋愛運）",
       "platform": "instagram",
+      "slot": "evening",
       "theme": "love",
-      "token_env": "IG_ACCESS_TOKEN_2",
-      "user_id_env": "IG_USER_ID_2"
+      "token_env": "IG_ACCESS_TOKEN_1",
+      "user_id_env": "IG_USER_ID_1"
     },
     {
-      "name": "X（総合運）",
+      "name": "X 朝（総合運）",
       "platform": "x",
+      "slot": "morning",
       "theme": "general",
       "token_env": "X_ACCESS_TOKEN",
       "token_secret_env": "X_ACCESS_TOKEN_SECRET",

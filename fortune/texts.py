@@ -13,7 +13,7 @@ STYLE = {
         "reply": "全星座の詳しい運勢は星よみPLANETで🌙",
     },
     "love": {
-        "icon": "💗",
+        "icon": "🌙",
         "tags_x": "#恋愛運 #星座占い",
         "tags_threads": "#恋愛運",
         "tags_ig": ("#恋愛運 #今日の恋愛運 #星座占い #12星座 #恋愛占い #占い #片思い "
@@ -29,6 +29,10 @@ COMMENT_CALL = "星座か誕生月をコメントしてくれたら、ひかり�
 
 def _style(fortune: dict) -> dict:
     return STYLE.get(fortune.get("kind", "general"), STYLE["general"])
+
+
+def _label(fortune: dict) -> str:
+    return fortune.get("theme_label") or "今日のテーマ"
 
 
 def _head(fortune: dict) -> str:
@@ -53,7 +57,7 @@ def x_reply(fortune: dict, site_url: str) -> str:
 def threads_post(fortune: dict) -> str:
     """Threads: 上限500字。"""
     r = fortune["ranking"]
-    lines = [_head(fortune), f"今日のテーマ：{fortune['theme']}", ""]
+    lines = [_head(fortune), f"{_label(fortune)}：{fortune['theme']}", ""]
     for s in r[:3]:
         lines.append(f"{s['rank']}位 {s['symbol']}{s['name']}：{s['message']}")
     lines.append("")
@@ -68,7 +72,7 @@ def threads_reply(fortune: dict, site_url: str) -> str:
 
 def instagram_caption(fortune: dict, site_name: str) -> str:
     """Instagram: 上限2200字。本文のリンクは押せないのでプロフィールへ誘導。"""
-    lines = [_head(fortune), f"今日のテーマ：{fortune['theme']}", ""]
+    lines = [_head(fortune), f"{_label(fortune)}：{fortune['theme']}", ""]
     for s in fortune["ranking"]:
         lines.append(f"{s['rank']}位 {s['symbol']}{s['name']}")
         lines.append(s["message"])
