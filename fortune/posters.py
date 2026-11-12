@@ -60,8 +60,20 @@ def post_threads(text: str, image_url: str | None, reply_text: str | None,
     return post_id
 
 
+def recent_threads_texts(token: str, user_id: str = "me") -> list[str]:
+    r = requests.get(f"{THREADS_API}/{user_id}/threads",
+                     params={"fields": "text", "limit": 10, "access_token": token}, timeout=TIMEOUT)
+    return [d.get("text") or "" for d in _check(r, "Threads 投稿一覧").get("data", [])]
+
+
 # ---------------- Instagram ----------------
 IG_API = "https://graph.facebook.com/v21.0"
+
+
+def recent_instagram_captions(token: str, ig_user: str) -> list[str]:
+    r = requests.get(f"{IG_API}/{ig_user}/media",
+                     params={"fields": "caption", "limit": 10, "access_token": token}, timeout=TIMEOUT)
+    return [d.get("caption") or "" for d in _check(r, "Instagram 投稿一覧").get("data", [])]
 
 
 def post_instagram(caption: str, image_url: str, token: str, ig_user: str) -> str:

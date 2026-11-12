@@ -82,6 +82,26 @@ def _texts_for(platform: str, fortune: dict) -> tuple[str, str | None]:
     raise RuntimeError(f"未対応のSNS: {platform}")
 
 
+def _already_posted(acc: dict, body: str) -> bool:
+    """同じ見出し（日付＋タイトル）の投稿が最近あれば True。
+    GitHub の定期実行が遅れて、手動実行と二重に投稿されるのを防ぐ。"""
+    from fortune import posters
+
+    head = body.splitlines()[0]
+    p = acc["platform"]
+    try:
+        if p == "threads":
+            recent = posters.recent_threads_texts(env(acc["token_env"]), env(acc.get("user_id_env")) or "me")
+        elif p == "instagram":
+            recent = posters.recent_instagram_captions(env(acc["token_env"]), env(acc.get("user_id_env")))
+        else:
+            return False
+    except Exception as e:  # 確認できないときは投稿を優先する
+        print(f"[warn] {acc['name']}: 重複確認に失敗（{e}）")
+        return False
+    return any(t.startswith(head) for t in recent)
+
+
 def _post_one(acc: dict, fortune: dict, body: str, reply: str | None) -> str:
     from fortune import posters
 
@@ -118,6 +138,9 @@ def cmd_post(dry_run: bool, slot: str) -> int:
 
         if not env(acc["token_env"]):
             print(f"[skip] {acc['name']}: {acc['token_env']} が未登録のためスキップ")
+            continue
+        if _already_posted(acc, body):
+            print(f"[skip] {acc['name']}: 同じ投稿がすでにあるためスキップ")
             continue
         if posted:
             time.sleep(15)  # アカウント間で少し間をあける
