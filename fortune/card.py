@@ -84,7 +84,7 @@ def make_card(fortune: dict, out_path: Path, site_name: str) -> Path:
         draw.text((left + 330, cy + 22), f"ラッキー：{s['lucky_item']}／{s['lucky_color']}",
                   font=f_lucky, fill=SUB, anchor="lm")
 
-    draw.text((W // 2, H - 48), f"詳しい運勢は「{site_name}」で", font=_font(34), fill=GOLD, anchor="mm")
+    draw.text((W // 2, H - 48), f"じっくり鑑定は四柱推命で ─ {site_name}", font=_font(34), fill=GOLD, anchor="mm")
 
     out_path.parent.mkdir(parents=True, exist_ok=True)
     # Instagram の API は JPEG しか受け付けないため JPEG で保存する

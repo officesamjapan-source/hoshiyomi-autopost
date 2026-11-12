@@ -10,7 +10,9 @@ STYLE = {
         "tags_threads": "#星座占い",
         "tags_ig": ("#今日の運勢 #星座占い #12星座 #占い #星占い #運勢 #星よみ "
                     "#開運 #ラッキーアイテム #ラッキーカラー #占い好きな人と繋がりたい"),
-        "reply": "全星座の詳しい運勢は星よみPLANETで🌙",
+        "reply": ("星座占いは、毎日のちいさなヒント。\n"
+                  "あなただけの運命の流れをじっくり読み解くなら、生年月日から占う「四柱推命」で🔮\n"
+                  "星よみPLANETはこちら👇"),
     },
     "love": {
         "icon": "🌙",
@@ -18,7 +20,9 @@ STYLE = {
         "tags_threads": "#恋愛運",
         "tags_ig": ("#恋愛運 #今日の恋愛運 #星座占い #12星座 #恋愛占い #占い #片思い "
                     "#恋愛 #星占い #開運 #占い好きな人と繋がりたい"),
-        "reply": "あなたの恋の流れをもっと詳しく。星よみPLANETで💫",
+        "reply": ("あの人との相性、恋が動く時期をじっくり知りたい方へ。\n"
+                  "生年月日から読み解く「四柱推命」の鑑定は星よみPLANETで🌙\n"
+                  "こちらからどうぞ👇"),
     },
 }
 
@@ -79,6 +83,8 @@ def instagram_caption(fortune: dict, site_name: str) -> str:
         lines.append(f"ラッキー：{s['lucky_item']}／{s['lucky_color']}")
         lines.append("")
     lines += [COMMENT_CALL, "",
-              f"もっと詳しくは「{site_name}」で{_style(fortune)['icon']}", "プロフィールのリンクからどうぞ",
+              "星座占いは毎日のちいさなヒント。",
+              f"あなただけの運命をじっくり読み解く「四柱推命」の鑑定は「{site_name}」で{_style(fortune)['icon']}",
+              "プロフィールのリンクからどうぞ",
               "保存して毎朝チェックしてね✨", "", _style(fortune)["tags_ig"]]
     return "\n".join(lines)[:2200]
