@@ -150,7 +150,7 @@ SNSの自分の投稿についたコメントに、1回だけ返信します。
 {hint}
 
 # 返信のルール
-- 50〜110文字。絵文字は1〜2個まで
+- 50〜110文字。文章が主役。絵文字は使わないか、使っても🌙を1つだけ（ほかの絵文字は使わない）
 - 投稿の内容から、その星座の順位と運勢にふれる。投稿に書かれていないことは作らない
 - 誕生月だけで星座が2つありうるときは、両方の順位を短く伝える
 - 返信は1回きりなので、問いかけで終えず、やさしい応援の一言で締める
@@ -179,12 +179,13 @@ skip のときは text を空にし、reason に理由を短く書く。"""
     return data
 
 
-_TEMPLATE_HIGH = ["{name}は今日{rank}位{medal}✨ 星が味方してくれる日です。楽しんでくださいね💗",
-                  "{name}は{rank}位{medal} いい流れに乗れる日ですよ。素敵な一日を🌙"]
-_TEMPLATE_MID = ["{name}は{rank}位🌙 自分のペースを大切にすると、流れが整っていきます✨",
-                 "{name}は今日{rank}位です。小さな「いいこと」が見つかる日になりますように💫"]
-_TEMPLATE_LOW = ["{name}は{rank}位…でも大丈夫🌙 今日はゆっくり自分をいたわる日にしてくださいね💗",
-                 "{name}は今日{rank}位。無理せずいきましょう。明日はきっと流れが変わります✨"]
+# 絵文字は使わないか、使っても🌙を1つまで（文章が主役）
+_TEMPLATE_HIGH = ["{name}は今日{rank}位です。星が味方してくれる日なので、思いきり楽しんでくださいね。",
+                  "{name}は{rank}位。いい流れに乗れる日ですよ。素敵な一日になりますように🌙"]
+_TEMPLATE_MID = ["{name}は{rank}位です。自分のペースを大切にすると、流れが整っていきますよ。",
+                 "{name}は今日{rank}位。小さな「いいこと」が見つかる日になりますように🌙"]
+_TEMPLATE_LOW = ["{name}は{rank}位。でも大丈夫です。今日はゆっくり、自分をいたわる日にしてくださいね🌙",
+                 "{name}は今日{rank}位。無理せずいきましょう。明日はきっと流れが変わりますよ。"]
 
 
 def _template_reply(post_text: str, found: dict) -> dict:
@@ -193,13 +194,12 @@ def _template_reply(post_text: str, found: dict) -> dict:
         return {"action": "skip", "reason": "投稿から順位を読み取れない", "text": ""}
     if len(ranks) == 2:  # 誕生月だけのとき
         (k1, r1), (k2, r2) = ranks
-        text = (f"コメントありがとうございます🌙 {_SIGN_INFO[k1][0]}なら{r1}位、"
-                f"{_SIGN_INFO[k2][0]}なら{r2}位です。今日もあなたに、やさしい星のめぐりを💗")
+        text = (f"コメントありがとうございます。{_SIGN_INFO[k1][0]}なら{r1}位、"
+                f"{_SIGN_INFO[k2][0]}なら{r2}位です。今日もあなたに、やさしい星のめぐりを🌙")
         return {"action": "reply", "reason": "テンプレート", "text": text}
     key, rank = ranks[0]
     pool = _TEMPLATE_HIGH if rank <= 3 else (_TEMPLATE_MID if rank <= 8 else _TEMPLATE_LOW)
-    medal = {1: "🥇", 2: "🥈", 3: "🥉"}.get(rank, "")
-    text = random.choice(pool).format(name=_SIGN_INFO[key][0] + "さん", rank=rank, medal=medal)
+    text = random.choice(pool).format(name=_SIGN_INFO[key][0] + "さん", rank=rank)
     return {"action": "reply", "reason": "テンプレート", "text": text}
 
 

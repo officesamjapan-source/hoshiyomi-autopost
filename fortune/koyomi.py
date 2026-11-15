@@ -156,6 +156,6 @@ def koyomi_line(day: date) -> str:
     ev = events(day)
     if ev:
         names = "・".join(n for n, _ in ev[:3])
-        return f"📅今日の暦：{names}（{ev[0][1]}）"
+        return f"今日の暦：{names}（{ev[0][1]}）"
     kan, yomi = kanshi(day)
-    return f"📅今日の干支：{kan}（{yomi}）"
+    return f"今日の干支：{kan}（{yomi}）"

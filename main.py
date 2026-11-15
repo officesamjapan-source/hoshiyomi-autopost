@@ -32,6 +32,8 @@ JST = timezone(timedelta(hours=9))
 # GitHub Actions では未設定の変数が空文字で渡るため `or` で既定値にする
 SITE_NAME = os.environ.get("SITE_NAME") or "星よみPLANET"
 SITE_URL = os.environ.get("SITE_URL") or "https://example.com/"
+# 投稿の下にぶら下げる案内先（無料かんたん診断の公式LINE）。サイトへの案内は LINE の中で行う
+LINE_URL = os.environ.get("LINE_URL") or "https://lin.ee/ViIxT1p"
 
 
 def load_accounts(slot: str | None = None) -> list[dict]:
@@ -89,11 +91,11 @@ def _texts_for(platform: str, fortune: dict) -> tuple[str, str | None]:
     if fortune.get("kind") == "birthmonth":
         if platform != "threads":
             raise RuntimeError("お昼の誕生月投稿は Threads だけに対応しています")
-        return texts.threads_noon(fortune), f"{texts.NOON_REPLY}\n{SITE_URL}"
+        return texts.threads_noon(fortune), f"{texts.NOON_REPLY}\n{LINE_URL}"
     if platform == "x":
-        return texts.x_post(fortune), texts.x_reply(fortune, SITE_URL)
+        return texts.x_post(fortune), texts.x_reply(fortune, LINE_URL)
     if platform == "threads":
-        return texts.threads_post(fortune), texts.threads_reply(fortune, SITE_URL)
+        return texts.threads_post(fortune), texts.threads_reply(fortune, LINE_URL)
     if platform == "instagram":
         return texts.instagram_caption(fortune, SITE_NAME), None
     raise RuntimeError(f"未対応のSNS: {platform}")
