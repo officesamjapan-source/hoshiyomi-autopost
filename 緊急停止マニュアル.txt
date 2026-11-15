@@ -1,0 +1,79 @@
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+ 星よみPLANET 自動投稿　緊急停止マニュアル
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+スパム被害・乗っ取り・不審な投稿があったときに使います。
+どれもスマホのブラウザからでも操作でき、費用はかかりません。
+
+リポジトリ：https://github.com/officesamjapan-source/hoshiyomi-autopost
+
+
+■ ◎ いちばん簡単：緊急停止スイッチ（ボタン2回）
+
+ 1. 次のページを開く（ブックマークしておくと便利）
+    https://github.com/officesamjapan-source/hoshiyomi-autopost/actions/workflows/emergency-stop.yml
+ 2. 「Run workflow」を押す
+ 3. mode が「停止」になっていることを確認して、緑の「Run workflow」を押す
+    → 30秒ほどで、自動投稿と自動返信が止まります（実行中のものも取り消し）
+
+ ※ 再開するとき：同じ手順で mode を「再開」に変えて「Run workflow」
+ ※ スイッチが動かないときは、下の ① の方法で止めてください
+
+
+■ ① まず止める：自動投稿・自動返信を全部止める（1分）
+
+ 1. GitHub で上のリポジトリを開く
+ 2. Settings → 左メニューの Actions → General
+ 3. 「Actions permissions」で「Disable actions」を選んで Save
+
+ ※ 動いている途中の実行がある場合
+    Actions タブ → その実行を開く →「Cancel workflow」
+
+ ※ 再開するとき
+    同じ画面で「Allow all actions and reusable workflows」に戻して Save
+
+
+■ ② 鍵を無効にする：トークンを使えなくする（乗っ取りが疑われるとき）
+
+ ・Instagram（アプリ）
+   設定とアクティビティ → ウェブサイトのアクセス許可 → アプリとウェブサイト
+   → hoshiyomi-autopost を「削除」
+   （パソコンなら https://www.instagram.com/accounts/manage_access/ ）
+
+ ・Threads（アプリ）
+   設定 → アカウント → ウェブサイトのアクセス許可
+   → hoshiyomi-autopost を「削除」
+
+ ・GitHub
+   リポジトリの Settings → Secrets and variables → Actions
+   → THREADS_ACCESS_TOKEN_1 / IG_ACCESS_TOKEN_1 などを「Delete」
+
+ 連携を削除した時点で、Meta 側でトークンは無効になります。
+ 再開するときは、トークンを発行し直して GitHub に登録し直します。
+
+
+■ ③ アカウント自体を守る（パスワードが漏れた疑いがあるとき）
+
+ GitHub・Facebook（Meta）・Instagram のパスワードを変更し、
+ 2段階認証を有効にする。
+
+
+■ スパムコメントへの備え（最初から入っている仕組み）
+
+ ・自動返信は1回の実行で最大10件まで
+ ・同じ人には1つの投稿につき1回だけ
+ ・星座か誕生月が書かれていないコメントには返信しない
+ → スパムが大量に来ても、こちらから大量に返信することはありません。
+
+
+■ 関係する場所のメモ
+
+ ・GitHub リポジトリ：officesamjapan-source/hoshiyomi-autopost
+ ・Meta アプリ：hoshiyomi-autopost（ID 1147946411034640）
+   https://developers.facebook.com/apps/1147946411034640/
+ ・ビジネスポートフォリオ：星よみPLANET｜今日の恋運
+ ・SNS アカウント：Threads / Instagram とも @hoshiyomi_koi
+
+ 費用が発生する操作はしていません（すべて無料の範囲）。
+
+作成：2026年11月13日

@@ -3,6 +3,8 @@ from __future__ import annotations
 
 from datetime import date
 
+from . import koyomi
+
 STYLE = {
     "general": {
         "icon": "🔮",
@@ -58,10 +60,14 @@ def x_reply(fortune: dict, site_url: str) -> str:
     return f"{_style(fortune)['reply']}\n{site_url}"
 
 
+def _koyomi(fortune: dict) -> str:
+    return koyomi.koyomi_line(date.fromisoformat(fortune["date"]))
+
+
 def threads_post(fortune: dict) -> str:
     """Threads: 上限500字。"""
     r = fortune["ranking"]
-    lines = [_head(fortune), f"{_label(fortune)}：{fortune['theme']}", ""]
+    lines = [_head(fortune), f"{_label(fortune)}：{fortune['theme']}", _koyomi(fortune), ""]
     for s in r[:3]:
         lines.append(f"{s['rank']}位 {s['symbol']}{s['name']}：{s['message']}")
     lines.append("")
@@ -74,9 +80,30 @@ def threads_reply(fortune: dict, site_url: str) -> str:
     return f"{_style(fortune)['reply']}\n{site_url}"
 
 
+def threads_noon(fortune: dict) -> str:
+    """お昼の短い投稿（文章だけ）。1行目に日付を入れる（二重投稿チェックが1行目で判定するため）。"""
+    d = date.fromisoformat(fortune["date"])
+    ev = koyomi.events(d)
+    if ev:
+        names = "・".join(n for n, _ in ev[:2])
+        why = f"今日は{names}。{ev[0][1]}です。"
+    else:
+        kan, yomi = koyomi.kanshi(d)
+        why = f"今日の干支は{kan}（{yomi}）。"
+    lines = [f"🌙{d.month}/{d.day}（{'月火水木金土日'[d.weekday()]}）{fortune['hook']}", why,
+             f"そんな今日、{fortune['title']}", ""]
+    lines += [f"第{s['rank']}位　{s['month']}月生まれ：{s['message']}" for s in fortune["ranking"]]
+    lines += ["", fortune["call"], "#誕生月占い"]
+    return "\n".join(lines)[:500]
+
+
+NOON_REPLY = ("生まれた月だけでなく、生年月日まで使って運の流れをじっくり読み解くなら「四柱推命」で🔮\n"
+              "星よみPLANETはこちら👇")
+
+
 def instagram_caption(fortune: dict, site_name: str) -> str:
     """Instagram: 上限2200字。本文のリンクは押せないのでプロフィールへ誘導。"""
-    lines = [_head(fortune), f"{_label(fortune)}：{fortune['theme']}", ""]
+    lines = [_head(fortune), f"{_label(fortune)}：{fortune['theme']}", _koyomi(fortune), ""]
     for s in fortune["ranking"]:
         lines.append(f"{s['rank']}位 {s['symbol']}{s['name']}")
         lines.append(s["message"])

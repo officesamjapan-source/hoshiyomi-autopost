@@ -7,13 +7,14 @@
   python main.py reply               # Threads / Instagram のコメントに自動返信
   python main.py reply --dry-run     # 返信せずに返信文だけ表示
   python main.py generate --date 2026-12-01   # 日付指定
-  --slot morning / evening で朝・夜の枠を指定（省略時は日本時間の時刻で自動判定）
+  --slot morning / noon / evening で朝・昼・夜の枠を指定（省略時は日本時間の時刻で自動判定）
 """
 from __future__ import annotations
 
 import argparse
 import json
 import os
+import re
 import sys
 import time
 from datetime import date, datetime, timedelta, timezone
@@ -41,8 +42,11 @@ def load_accounts(slot: str | None = None) -> list[dict]:
 
 
 def current_slot() -> str:
-    """日本時間の今の時刻から朝・夜を決める（GitHub の遅延で数十分ずれても大丈夫なように）。"""
-    return "morning" if datetime.now(JST).hour < 15 else "evening"
+    """日本時間の今の時刻から朝・昼・夜を決める（GitHub の遅延で1〜2時間ずれても大丈夫なように）。"""
+    hour = datetime.now(JST).hour
+    if hour < 10:
+        return "morning"
+    return "noon" if hour < 17 else "evening"
 
 
 def env(name: str | None) -> str:
@@ -70,6 +74,10 @@ def cmd_generate(day: date, slot: str) -> None:
     OUT.mkdir(parents=True, exist_ok=True)
     for theme in themes:
         fortune = build_fortune(day, theme)
+        if theme == "birthmonth":  # お昼の投稿は文章だけ（画像なし）
+            (OUT / f"{theme}.json").write_text(json.dumps(fortune, ensure_ascii=False, indent=2), encoding="utf-8")
+            print(f"生成しました: {theme}（画像なし）")
+            continue
         card_rel = f"cards/{day.isoformat()}-{theme}.jpg"
         make_card(fortune, ROOT / card_rel, SITE_NAME)
         fortune["card"] = card_rel
@@ -78,6 +86,10 @@ def cmd_generate(day: date, slot: str) -> None:
 
 
 def _texts_for(platform: str, fortune: dict) -> tuple[str, str | None]:
+    if fortune.get("kind") == "birthmonth":
+        if platform != "threads":
+            raise RuntimeError("お昼の誕生月投稿は Threads だけに対応しています")
+        return texts.threads_noon(fortune), f"{texts.NOON_REPLY}\n{SITE_URL}"
     if platform == "x":
         return texts.x_post(fortune), texts.x_reply(fortune, SITE_URL)
     if platform == "threads":
@@ -112,7 +124,8 @@ def _post_one(acc: dict, fortune: dict, body: str, reply: str | None) -> str:
 
     p = acc["platform"]
     if p == "threads":
-        return posters.post_threads(body, image_url_for(fortune["card"]), reply,
+        image = image_url_for(fortune["card"]) if fortune.get("card") else None
+        return posters.post_threads(body, image, reply,
                                     token=env(acc["token_env"]), user_id=_uid(acc))
     if p == "instagram":
         user_id = _uid(acc)
@@ -147,14 +160,39 @@ def cmd_post(dry_run: bool, slot: str) -> int:
             continue
         if posted:
             time.sleep(15)  # アカウント間で少し間をあける
-        try:
-            pid = _post_one(acc, fortune, body, reply)
-            print(f"[ok] {acc['name']}: {pid}")
-            posted += 1
-        except Exception as e:  # 1つ失敗しても他のアカウントは続ける
-            print(f"[error] {acc['name']}: {e}")
-            failed.append(acc["name"])
+        # 一時的なトラブル（画像の読み込み失敗・混雑など）に備えて、少し待って最大3回まで試す
+        for attempt in range(1, RETRIES + 1):
+            try:
+                pid = _post_one(acc, fortune, body, reply)
+                print(f"[ok] {acc['name']}: {pid}")
+                posted += 1
+                break
+            except Exception as e:  # 1つ失敗しても他のアカウントは続ける
+                msg = _redact(str(e))
+                # ::error:: にすると、GitHub にログインしなくても実行画面の Annotations に理由が出る
+                print(f"::error title={acc['name']} 投稿失敗（{attempt}/{RETRIES}回目）::{msg}")
+                if attempt == RETRIES:
+                    failed.append(acc["name"])
+                    break
+                time.sleep(RETRY_WAIT)
+                if _already_posted(acc, body):  # 失敗に見えて実は投稿できていた場合
+                    print(f"[ok] {acc['name']}: 投稿を確認できました")
+                    posted += 1
+                    break
     return 1 if failed else 0
+
+
+RETRIES = 3
+RETRY_WAIT = 90  # 秒
+
+
+def _redact(text: str) -> str:
+    """エラー文にトークンが混ざっても表示されないように伏せる。"""
+    for name, val in os.environ.items():
+        if val and len(val) >= 20 and ("TOKEN" in name or "SECRET" in name or "KEY" in name):
+            text = text.replace(val, "***")
+    text = re.sub(r"access_token=[^&\s'\"]+", "access_token=***", text)
+    return text.replace("\n", " ")[:800]
 
 
 def cmd_reply(dry_run: bool) -> int:
@@ -193,8 +231,8 @@ def main() -> int:
     ap.add_argument("command", choices=["generate", "post", "reply"])
     ap.add_argument("--date", help="YYYY-MM-DD（省略時は日本時間の今日）")
     ap.add_argument("--dry-run", action="store_true")
-    ap.add_argument("--slot", choices=["morning", "evening", "auto"], default="auto",
-                    help="morning（朝）/ evening（夜）。省略時は日本時間の時刻で自動判定")
+    ap.add_argument("--slot", choices=["morning", "noon", "evening", "auto"], default="auto",
+                    help="morning（朝）/ noon（昼）/ evening（夜）。省略時は日本時間の時刻で自動判定")
     args = ap.parse_args()
     slot = current_slot() if args.slot == "auto" else args.slot
     if args.command == "generate":

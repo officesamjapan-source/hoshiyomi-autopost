@@ -205,7 +205,41 @@ def _claude_texts(order, day: date, theme: str) -> dict:
     return {"theme": data["theme"], "signs": signs}
 
 
+# ---------- お昼の「誕生月 TOP5」（Threads に文章だけで投稿） ----------
+_MONTH_MESSAGES = [
+    "思いがけない朗報が届きそう", "人とのご縁が運を運んでくる日", "直感で選んだものが正解に",
+    "お金の巡りを整えると吉", "ていねいな言葉が幸運の鍵", "小さな挑戦が実を結ぶ日",
+    "懐かしい人からうれしい便り", "笑顔がいちばんのお守りに", "迷ったら心が軽いほうへ",
+    "ほしかった答えが見つかる日", "がんばりが認められる予感", "ふと始めたことが流れを変える",
+]
+_NOON_HOOKS = [
+    "見つけてくれたあなたへ", "今日この投稿に出会えたあなたへ", "お昼にひと息ついているあなたへ",
+    "ここで手を止めてくれたあなたへ", "今日もがんばっているあなたへ",
+]
+_NOON_CALLS = [
+    "受け取ったしるしに『🌙』をひとつ置いていってね",
+    "この流れに乗りたい方は『🍀』をひとつ置いていってね",
+    "読んでくれたしるしに『✨』を置いていってね",
+]
+
+
+def build_birthmonth(day: date) -> dict:
+    """誕生月の TOP5。順位・言葉は日付から決まる（何度実行しても同じ）。"""
+    salt = os.environ.get("RANKING_SALT") or "hoshiyomi-planet"
+    rng = random.Random(f"{salt}-birthmonth-{day.isoformat()}")
+    months = rng.sample(range(1, 13), 12)
+    messages = rng.sample(_MONTH_MESSAGES, 5)
+    return {
+        "date": day.isoformat(), "kind": "birthmonth", "title": "運が味方する誕生月 TOP5",
+        "source": "template",
+        "hook": rng.choice(_NOON_HOOKS), "call": rng.choice(_NOON_CALLS),
+        "ranking": [{"rank": i + 1, "month": m, "message": messages[i]} for i, m in enumerate(months[:5])],
+    }
+
+
 def build_fortune(day: date, theme: str = "general") -> dict:
+    if theme == "birthmonth":
+        return build_birthmonth(day)
     if theme not in THEMES:
         raise ValueError(f"未対応のテーマ: {theme}（{', '.join(THEMES)} のどれか）")
     order = rank_signs(day, theme)

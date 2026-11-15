@@ -1,11 +1,18 @@
 {
-  "_説明": "投稿先の一覧。slot は morning（朝7時）か evening（夜21時）。theme は general（総合運）か love（恋愛運）。*_env はGitHub Secretsの名前。Secretが未登録のものは自動でスキップされます。同じアカウントに朝と夜の2件を書けば、1日2回投稿します。",
+  "_説明": "投稿先の一覧。slot は morning（朝7時）・noon（昼12時）・evening（夜21時）。theme は general（総合運）・love（恋愛運）・birthmonth（誕生月TOP5、Threadsのみ・画像なし）。*_env はGitHub Secretsの名前。Secretが未登録のものは自動でスキップされます。同じアカウントに朝と夜の2件を書けば、1日2回投稿します。",
   "accounts": [
     {
       "name": "Threads 朝（総合運）",
       "platform": "threads",
       "slot": "morning",
       "theme": "general",
+      "token_env": "THREADS_ACCESS_TOKEN_1"
+    },
+    {
+      "name": "Threads 昼（誕生月TOP5・文章のみ）",
+      "platform": "threads",
+      "slot": "noon",
+      "theme": "birthmonth",
       "token_env": "THREADS_ACCESS_TOKEN_1"
     },
     {
